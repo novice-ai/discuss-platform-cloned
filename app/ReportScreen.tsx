@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { RootStackParamList } from "../App";
 import { getHandleFromPid } from "../lib/anonymize";
-import { useStore } from "../lib/store";
+import { TOKEN_COSTS, useStore } from "../lib/store";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Report">;
 
@@ -25,14 +25,20 @@ export default function ReportScreen({ navigation, route }: Props) {
   const { item, isReply } = route.params;
   const [reason, setReason] = useState("");
   const addReport = useStore((s) => s.addReport);
+  const tokenBalance = useStore((s) => s.tokenBalance);
+  const canAfford = useStore((s) => s.canAfford);
 
   const trimmed = reason.trim();
   const over = reason.length > MAX;
-  const canSubmit = trimmed.length >= MIN && !over;
+  const canSubmit = trimmed.length >= MIN && !over && canAfford(TOKEN_COSTS.REPORT);
 
   function handleSubmit() {
     if (!canSubmit) return;
-    addReport(item.id, item.authorPid, trimmed);
+    const ok = addReport(item.id, item.authorPid, trimmed);
+    if (!ok) {
+      Alert.alert("Insufficient tokens", `Reporting costs ${TOKEN_COSTS.REPORT} tokens. You have ${tokenBalance}.`);
+      return;
+    }
     Alert.alert("Report submitted", "Thank you.", [
       { text: "OK", onPress: () => navigation.goBack() },
     ]);
@@ -56,7 +62,7 @@ export default function ReportScreen({ navigation, route }: Props) {
               : "bg-brand/40 rounded-full px-5 py-2"
           }
         >
-          <Text className="text-white font-bold">Submit</Text>
+          <Text className="text-white font-bold">Submit (−{TOKEN_COSTS.REPORT})</Text>
         </Pressable>
       </View>
 

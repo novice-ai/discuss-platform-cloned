@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { LogOut, Plus, Settings } from "lucide-react-native";
+import { ClipboardList, Coins, LogOut, Plus, Settings } from "lucide-react-native";
 import { useMemo, useRef } from "react";
 import { FlatList, Platform, Pressable, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,6 +20,8 @@ export default function FeedScreen({ navigation }: Props) {
   const posts = useStore((s) => s.posts);
   const blockedPids = useStore((s) => s.blockedPids);
   const resetUserState = useStore((s) => s.resetUserState);
+  const endlineResponses = useStore((s) => s.endlineResponses);
+  const tokenBalance = useStore((s) => s.tokenBalance);
 
   const sheetRef = useRef<PostActionsSheetRef>(null);
 
@@ -40,10 +42,28 @@ export default function FeedScreen({ navigation }: Props) {
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "left", "right"]}>
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-divider">
         <Text className="text-ink font-bold text-base">Group: Test Group</Text>
+
         <View className="flex-row items-center">
           <View className="bg-divider rounded-full px-3 py-1 mr-3">
             <Text className="text-ink text-xs font-bold">Member {memberId}</Text>
           </View>
+          <Pressable
+            onPress={() => navigation.navigate("Wallet")}
+            hitSlop={10}
+            className="mr-3 flex-row items-center"
+          >
+            <Coins size={18} color="#1D9BF0" />
+            <Text className="text-brand font-bold text-sm ml-1">{tokenBalance}</Text>
+          </Pressable>
+          {endlineResponses === null && (
+            <Pressable
+              onPress={() => navigation.navigate("EndlineSurvey")}
+              hitSlop={10}
+              className="mr-3"
+            >
+              <ClipboardList size={22} color="#536471" />
+            </Pressable>
+          )}
           <Pressable
             onPress={() => navigation.navigate("Settings")}
             hitSlop={10}

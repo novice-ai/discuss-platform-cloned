@@ -17,7 +17,7 @@ import {
 import { Alert, Pressable, Text } from "react-native";
 import type { RootStackParamList } from "../App";
 import { getHandleFromPid } from "../lib/anonymize";
-import { useStore } from "../lib/store";
+import { TOKEN_COSTS, useStore } from "../lib/store";
 
 export interface PostActionsSheetRef {
   open: (id: string, isReply: boolean) => void;
@@ -39,6 +39,8 @@ const PostActionsSheet = forwardRef<PostActionsSheetRef>((_, ref) => {
   const posts = useStore((s) => s.posts);
   const replies = useStore((s) => s.replies);
   const blockUser = useStore((s) => s.blockUser);
+  const tokenBalance = useStore((s) => s.tokenBalance);
+  const canAfford = useStore((s) => s.canAfford);
 
   const item = useMemo(() => {
     if (!target) return null;
@@ -79,9 +81,16 @@ const PostActionsSheet = forwardRef<PostActionsSheetRef>((_, ref) => {
     if (!item) return;
     const handle = getHandleFromPid(item.authorPid);
     sheetRef.current?.dismiss();
+    if (!canAfford(TOKEN_COSTS.BLOCK_USER)) {
+      Alert.alert(
+        "Insufficient tokens",
+        `Blocking costs ${TOKEN_COSTS.BLOCK_USER} tokens. You have ${tokenBalance}.`,
+      );
+      return;
+    }
     Alert.alert(
       `Block ${handle}?`,
-      "You won't see their posts or replies.",
+      `You won't see their posts or replies. Costs ${TOKEN_COSTS.BLOCK_USER} tokens (balance: ${tokenBalance}).`,
       [
         { text: "Cancel", style: "cancel" },
         {

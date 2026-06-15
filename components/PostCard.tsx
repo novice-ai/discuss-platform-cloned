@@ -5,7 +5,7 @@ import { MoreHorizontal } from "lucide-react-native";
 import { Alert, Pressable, Text, View } from "react-native";
 import type { RootStackParamList } from "../App";
 import { getHandleFromPid } from "../lib/anonymize";
-import { selectIsActive, useStore } from "../lib/store";
+import { TOKEN_COSTS, selectIsActive, useStore } from "../lib/store";
 import type { Post } from "../types";
 import Avatar from "./Avatar";
 import ReactionBar from "./ReactionBar";
@@ -50,6 +50,8 @@ export default function PostCard({
   const myPid = useStore((s) => s.pid);
   const deletePost = useStore((s) => s.deletePost);
   const deleteReply = useStore((s) => s.deleteReply);
+  const tokenBalance = useStore((s) => s.tokenBalance);
+  const canAfford = useStore((s) => s.canAfford);
 
   const isOwn = myPid !== null && myPid === post.authorPid;
   const bodyClass =
@@ -63,9 +65,17 @@ export default function PostCard({
 
   function handleMorePress() {
     if (isOwn) {
+      const cost = isReply ? TOKEN_COSTS.DELETE_REPLY : TOKEN_COSTS.DELETE_POST;
+      if (!canAfford(cost)) {
+        Alert.alert(
+          "Insufficient tokens",
+          `Removing a ${isReply ? "reply" : "post"} costs ${cost} tokens. You have ${tokenBalance}.`,
+        );
+        return;
+      }
       Alert.alert(
         isReply ? "Delete this reply?" : "Delete this post?",
-        undefined,
+        `This costs ${cost} tokens (balance: ${tokenBalance})`,
         [
           { text: "Cancel", style: "cancel" },
           {
@@ -81,6 +91,24 @@ export default function PostCard({
     } else {
       onMorePress?.();
     }
+  }
+
+  if (post.removed) {
+    return (
+      <View className="flex-row bg-bg px-4 py-3 border-b border-divider opacity-60">
+        <Avatar pid={post.authorPid} />
+        <View className="flex-1 ml-3">
+          <View className="flex-row items-center">
+            <Text className="text-ink font-bold">{handle}</Text>
+            <Text className="text-muted mx-1.5">·</Text>
+            <Text className="text-muted text-sm">{time}</Text>
+          </View>
+          <Text className="text-muted text-sm mt-1 italic">
+            This post was removed by a moderator.
+          </Text>
+        </View>
+      </View>
+    );
   }
 
   return (

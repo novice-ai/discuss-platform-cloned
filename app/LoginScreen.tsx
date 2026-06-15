@@ -1,8 +1,8 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { setPid } from "../lib/storage";
+import { getBaselinePid, getEndlinePid, getPid, setPid } from "../lib/storage";
 import { useStore } from "../lib/store";
 import type { RootStackParamList } from "../App";
 
@@ -14,13 +14,23 @@ export default function LoginScreen({ navigation }: Props) {
   const trimmed = value.trim();
   const canSubmit = trimmed.length > 0 && !submitting;
 
+  useEffect(() => {
+    getPid().then((stored) => { if (stored) setValue(stored); });
+  }, []);
+
   async function handleContinue() {
     if (!canSubmit) return;
     setSubmitting(true);
     try {
       await setPid(trimmed);
-      useStore.getState().setPid(trimmed);
-      navigation.replace("Feed");
+      const store = useStore.getState();
+      store.setPid(trimmed);
+      const [baselinePid, endlinePid] = await Promise.all([
+        getBaselinePid(),
+        getEndlinePid(),
+      ]);
+      if (endlinePid === trimmed) store.submitEndline({ _restored: 1 });
+      navigation.replace(baselinePid === trimmed ? "Feed" : "BaselineSurvey");
     } finally {
       setSubmitting(false);
     }

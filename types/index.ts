@@ -22,6 +22,14 @@ export interface Post {
   body: string;
   createdAt: string;
   reactions: ReactionCounts;
+  removed?: boolean;
+}
+
+export interface TokenTransaction {
+  id: string;
+  amount: number;
+  reason: string;
+  createdAt: string;
 }
 
 export interface Reply extends Post {
@@ -36,3 +44,5 @@ export interface Report {
   reason: string;
   createdAt: Date;
 }
+
+export type SurveyResponses = Record<string, string | number>;

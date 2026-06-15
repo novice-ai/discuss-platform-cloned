@@ -7,20 +7,25 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import BaselineSurveyScreen from "./app/BaselineSurveyScreen";
+import WalletScreen from "./app/WalletScreen";
 import ComposeScreen from "./app/ComposeScreen";
+import EndlineSurveyScreen from "./app/EndlineSurveyScreen";
 import FeedScreen from "./app/FeedScreen";
 import LoginScreen from "./app/LoginScreen";
 import PostDetailScreen from "./app/PostDetailScreen";
 import ProfileScreen from "./app/ProfileScreen";
 import ReportScreen from "./app/ReportScreen";
 import SettingsScreen from "./app/SettingsScreen";
-import { getPid } from "./lib/storage";
 import { useStore } from "./lib/store";
 import type { Post, Reply } from "./types";
 
 export type RootStackParamList = {
   Login: undefined;
+  BaselineSurvey: undefined;
   Feed: undefined;
+  EndlineSurvey: undefined;
+  Wallet: undefined;
   PostDetail: { post: Post };
   Profile: { pid: string };
   Compose: undefined;
@@ -35,10 +40,7 @@ export default function App() {
     useState<keyof RootStackParamList | null>(null);
 
   useEffect(() => {
-    getPid().then((pid) => {
-      if (pid) useStore.getState().setPid(pid);
-      setInitialRoute(pid ? "Feed" : "Login");
-    });
+    setInitialRoute("Login");
   }, []);
 
   if (!initialRoute) return null;
@@ -54,7 +56,16 @@ export default function App() {
               screenOptions={{ headerShown: false }}
             >
               <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen
+                name="BaselineSurvey"
+                component={BaselineSurveyScreen}
+              />
               <Stack.Screen name="Feed" component={FeedScreen} />
+              <Stack.Screen
+                name="EndlineSurvey"
+                component={EndlineSurveyScreen}
+                options={{ presentation: "modal", headerShown: false }}
+              />
               <Stack.Screen
                 name="PostDetail"
                 component={PostDetailScreen}
@@ -79,6 +90,11 @@ export default function App() {
                 name="Settings"
                 component={SettingsScreen}
                 options={{ headerShown: true, title: "Settings" }}
+              />
+              <Stack.Screen
+                name="Wallet"
+                component={WalletScreen}
+                options={{ headerShown: true, title: "Token Wallet" }}
               />
             </Stack.Navigator>
           </NavigationContainer>
